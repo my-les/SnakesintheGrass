@@ -1,10 +1,3 @@
-//
-//  GameScene.swift
-//  SnakesintheGrass
-//
-//  Created by myle$ on 9/29/24.
-//
-
 import SpriteKit
 
 class GameScene: SKScene {
@@ -18,6 +11,7 @@ class GameScene: SKScene {
     private let gridSize: CGFloat = 20
     private let gridWidth: Int
     private let gridHeight: Int
+    private var isGameOver: Bool = false
 
     override init(size: CGSize) {
         gridWidth = Int(size.width / gridSize)
@@ -32,6 +26,38 @@ class GameScene: SKScene {
     override func didMove(to view: SKView) {
         backgroundColor = .white
         setupGame()
+
+        // Adding swipe gesture recognizers
+        let swipeUp = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        swipeUp.direction = .up
+        view.addGestureRecognizer(swipeUp)
+
+        let swipeDown = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        swipeDown.direction = .down
+        view.addGestureRecognizer(swipeDown)
+
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        swipeLeft.direction = .left
+        view.addGestureRecognizer(swipeLeft)
+
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        swipeRight.direction = .right
+        view.addGestureRecognizer(swipeRight)
+    }
+
+    @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
+        switch gesture.direction {
+        case .up:
+            if moveDirection.dy == 0 { moveDirection = CGVector(dx: 0, dy: 1) }
+        case .down:
+            if moveDirection.dy == 0 { moveDirection = CGVector(dx: 0, dy: -1) }
+        case .left:
+            if moveDirection.dx == 0 { moveDirection = CGVector(dx: -1, dy: 0) }
+        case .right:
+            if moveDirection.dx == 0 { moveDirection = CGVector(dx: 1, dy: 0) }
+        default:
+            break
+        }
     }
 
     private func setupGame() {
@@ -39,7 +65,9 @@ class GameScene: SKScene {
         food?.removeFromParent()
         score = 0
         moveDirection = CGVector(dx: 1, dy: 0)
+        isGameOver = false
 
+        // Initial snake position
         let startPosition = CGPoint(x: CGFloat(gridWidth / 2), y: CGFloat(gridHeight / 2))
         addSnakePart(at: startPosition)
         spawnFood()
@@ -55,21 +83,23 @@ class GameScene: SKScene {
         food?.removeFromParent()
         let texture = SKTexture(imageNamed: "apple")
         food = SKSpriteNode(texture: texture, size: CGSize(width: gridSize, height: gridSize))
-        food?.position = CGPoint(x: CGFloat(Int.random(in: 0..<gridWidth)) * gridSize, y: CGFloat(Int.random(in: 0..<gridHeight)) * gridSize)
+        let randomX = CGFloat(Int.random(in: 0..<gridWidth)) * gridSize
+        let randomY = CGFloat(Int.random(in: 0..<gridHeight)) * gridSize
+        food?.position = CGPoint(x: randomX, y: randomY)
         addChild(food!)
     }
 
     private func setupScoreLabel() {
-        scoreLabel = SKLabelNode(fontNamed: "Arial")
-        scoreLabel?.fontSize = 24
+        scoreLabel = SKLabelNode(fontNamed: "CourierNewPS-BoldMT")
+        scoreLabel?.fontSize = 16
         scoreLabel?.fontColor = .black
-        scoreLabel?.position = CGPoint(x: size.width - 60, y: size.height - 40)
+        scoreLabel?.position = CGPoint(x: size.width / 2, y: size.height - 95)
         scoreLabel?.text = "Score: 0"
         addChild(scoreLabel!)
     }
 
     override func update(_ currentTime: TimeInterval) {
-        if currentTime > nextMoveTime {
+        if !isGameOver && currentTime > nextMoveTime {
             moveSnake()
             nextMoveTime = currentTime + moveSpeed
         }
@@ -82,6 +112,7 @@ class GameScene: SKScene {
             (head.1 + Int(moveDirection.dy) + gridHeight) % gridHeight
         )
 
+        // Check if the snake eats the food
         let foodPosition = (Int(food?.position.x ?? 0) / Int(gridSize), Int(food?.position.y ?? 0) / Int(gridSize))
         if newHead == foodPosition {
             snake.insert(newHead, at: 0)
@@ -101,6 +132,7 @@ class GameScene: SKScene {
 
     private func checkForCollisions() -> Bool {
         guard let head = snake.first else { return false }
+        // Check if snake collides with itself
         return snake.dropFirst().contains { $0 == head }
     }
 
@@ -110,6 +142,7 @@ class GameScene: SKScene {
     }
 
     private func gameOver() {
+        isGameOver = true
         let gameOverLabel = SKLabelNode(fontNamed: "Arial")
         gameOverLabel.fontSize = 48
         gameOverLabel.fontColor = .black
@@ -135,23 +168,21 @@ class GameScene: SKScene {
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if snake.count == 1 {
+        if isGameOver {
             // Restart the game
             removeAllChildren()
             setupGame()
         } else {
-            // Change direction
-            guard let touch = touches.first else { return }
-            let touchLocation = touch.location(in: self)
-            updateMoveDirection(for: touchLocation)
+            // Move towards food
+            moveTowardsFood()
         }
     }
 
-    private func updateMoveDirection(for touchLocation: CGPoint) {
-        guard let head = snake.first else { return }
-        let headPosition = CGPoint(x: CGFloat(head.0) * gridSize, y: CGFloat(head.1) * gridSize)
-        let dx = touchLocation.x - headPosition.x
-        let dy = touchLocation.y - headPosition.y
+    private func moveTowardsFood() {
+        guard let head = snake.first, let food = food else { return }
+        let foodPosition = (Int(food.position.x / gridSize), Int(food.position.y / gridSize))
+        let dx = foodPosition.0 - head.0
+        let dy = foodPosition.1 - head.1
 
         let newDirection: CGVector
         if abs(dx) > abs(dy) {
@@ -167,42 +198,36 @@ class GameScene: SKScene {
     }
 
     private func updateSnakeDisplay() {
-        removeAllChildren()
-        addChild(scoreLabel!)
+        // Clear existing snake parts and re-render
+        children.filter { $0 is SKSpriteNode && $0 != food }.forEach { $0.removeFromParent() }
 
         for (index, part) in snake.enumerated() {
-            let partType: SnakePartType = index == 0 ? .head : (index == snake.count - 1 ? .tail : .body)
-            let texture = SKTexture(imageNamed: partType.imageName(for: moveDirection))
+            let texture = SKTexture(imageNamed: SnakePartType(rawValue: index % 3)?.imageName(for: moveDirection) ?? "head")
             let newPart = SKSpriteNode(texture: texture, size: CGSize(width: gridSize, height: gridSize))
             newPart.position = CGPoint(x: CGFloat(part.0) * gridSize, y: CGFloat(part.1) * gridSize)
             addChild(newPart)
         }
+        enum SnakePartType: Int {
+            case head = 0
+            case body = 1
+            case tail = 2
 
-        if let food = food {
-            addChild(food)
-        }
-    }
-}
-
-enum SnakePartType: Int {
-    case head = 0
-    case body = 1
-    case tail = 2
-
-    func imageName(for direction: CGVector) -> String {
-        switch self {
-        case .head:
-            if direction.dx > 0 { return "head_right" }
-            if direction.dx < 0 { return "head_left" }
-            if direction.dy > 0 { return "head_up" }
-            return "head_down"
-        case .body:
-            return "body_horizontal"
-        case .tail:
-            if direction.dx > 0 { return "tail_left" }
-            if direction.dx < 0 { return "tail_right" }
-            if direction.dy > 0 { return "tail_down" }
-            return "tail_up"
+            func imageName(for direction: CGVector) -> String {
+                switch self {
+                case .head:
+                    if direction.dx > 0 { return "head_right" }
+                    if direction.dx < 0 { return "head_left" }
+                    if direction.dy > 0 { return "head_up" }
+                    return "head_down"
+                case .body:
+                    return "body_horizontal"
+                case .tail:
+                    if direction.dx > 0 { return "tail_left" }
+                    if direction.dx < 0 { return "tail_right" }
+                    if direction.dy > 0 { return "tail_down" }
+                    return "tail_up"
+                }
+            }
         }
     }
 }

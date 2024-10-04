@@ -1,4 +1,5 @@
 import SpriteKit
+import UIKit
 
 class GameScene: SKScene {
     private var snake: [(Int, Int)] = []
@@ -143,39 +144,52 @@ class GameScene: SKScene {
 
     private func gameOver() {
         isGameOver = true
-        let gameOverLabel = SKLabelNode(fontNamed: "Arial")
-        gameOverLabel.fontSize = 48
-        gameOverLabel.fontColor = .black
-        gameOverLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
-        gameOverLabel.text = "Game Over"
-        addChild(gameOverLabel)
-
-        let finalScoreLabel = SKLabelNode(fontNamed: "Arial")
-        finalScoreLabel.fontSize = 24
-        finalScoreLabel.fontColor = .black
-        finalScoreLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 - 40)
-        finalScoreLabel.text = "Final Score: \(score)"
-        addChild(finalScoreLabel)
-
-        let restartLabel = SKLabelNode(fontNamed: "Arial")
-        restartLabel.fontSize = 24
-        restartLabel.fontColor = .black
-        restartLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 - 80)
-        restartLabel.text = "Tap to Restart"
-        addChild(restartLabel)
-
-        isUserInteractionEnabled = true
+        showGameOverAlert()
     }
 
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if isGameOver {
-            // Restart the game
-            removeAllChildren()
-            setupGame()
-        } else {
-            // Move towards food
-            moveTowardsFood()
+    private func showGameOverAlert() {
+        let alertController = UIAlertController(title: "Caught Lacking!", message: "Your score: \(score)", preferredStyle: .alert)
+
+        let playAgainAction = UIAlertAction(title: "Play Again Lil Twin", style: .default) { [weak self] _ in
+            self?.restartGame()
         }
+        
+        let shareScoreAction = UIAlertAction(title: "Share Score", style: .default) { [weak self] _ in
+            self?.shareScore()
+        }
+        
+        let mainMenuAction = UIAlertAction(title: "Main Menu", style: .default) { [weak self] _ in
+            self?.goToMainMenu()
+        }
+        
+        alertController.addAction(playAgainAction)
+        alertController.addAction(shareScoreAction)
+        alertController.addAction(mainMenuAction)
+        
+        if let viewController = self.view?.window?.rootViewController {
+            viewController.present(alertController, animated: true, completion: nil)
+        }
+    }
+
+    private func restartGame() {
+        removeAllChildren()
+        setupGame()
+    }
+
+    private func shareScore() {
+        let activityViewController = UIActivityViewController(
+            activityItems: ["I scored \(score) points in Snakes in the Grass!"],
+            applicationActivities: nil
+        )
+        
+        if let viewController = self.view?.window?.rootViewController {
+            viewController.present(activityViewController, animated: true, completion: nil)
+        }
+    }
+
+    private func goToMainMenu() {
+        // Placeholder for now, as we don't have a main menu yet
+        print("Going to main menu")
     }
 
     private func moveTowardsFood() {

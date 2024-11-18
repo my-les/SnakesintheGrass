@@ -1,0 +1,6 @@
+<key>GCSupportedGameControllers</key>
+<array>
+    <string>gcController</string>
+</array>
+<key>GCSupportsControllerUserInteraction</key>
+<true/> 

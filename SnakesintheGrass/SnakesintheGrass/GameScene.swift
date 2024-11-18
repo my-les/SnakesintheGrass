@@ -6,7 +6,7 @@ class GameScene: SKScene {
     private var food: SKSpriteNode?
     private var moveDirection: CGVector = CGVector(dx: 1, dy: 0)
     private var nextMoveTime: TimeInterval = 0
-    private let moveSpeed: TimeInterval = 0.2
+    private let moveSpeed: TimeInterval = 0.1
     private var score: Int = 0
     private var scoreLabel: SKLabelNode?
     private let gridSize: CGFloat = 20
@@ -148,24 +148,24 @@ class GameScene: SKScene {
     }
 
     private func showGameOverAlert() {
-        let alertController = UIAlertController(title: "Caught Lacking!", message: "Your score: \(score)", preferredStyle: .alert)
+        let alertController = UIAlertController(title: "how you backdoor yourself?", message: "your score: \(score)", preferredStyle: .alert)
 
-        let playAgainAction = UIAlertAction(title: "Play Again Lil Twin", style: .default) { [weak self] _ in
+        let playAgainAction = UIAlertAction(title: "play again lil twin", style: .default) { [weak self] _ in
             self?.restartGame()
         }
-        
-        let shareScoreAction = UIAlertAction(title: "Share Score", style: .default) { [weak self] _ in
+
+        let shareScoreAction = UIAlertAction(title: "share score", style: .default) { [weak self] _ in
             self?.shareScore()
         }
-        
-        let mainMenuAction = UIAlertAction(title: "Main Menu", style: .default) { [weak self] _ in
+
+        let mainMenuAction = UIAlertAction(title: "main menu", style: .default) { [weak self] _ in
             self?.goToMainMenu()
         }
-        
+
         alertController.addAction(playAgainAction)
         alertController.addAction(shareScoreAction)
         alertController.addAction(mainMenuAction)
-        
+
         if let viewController = self.view?.window?.rootViewController {
             viewController.present(alertController, animated: true, completion: nil)
         }
@@ -181,7 +181,7 @@ class GameScene: SKScene {
             activityItems: ["I scored \(score) points in Snakes in the Grass!"],
             applicationActivities: nil
         )
-        
+
         if let viewController = self.view?.window?.rootViewController {
             viewController.present(activityViewController, animated: true, completion: nil)
         }
@@ -212,34 +212,88 @@ class GameScene: SKScene {
     }
 
     private func updateSnakeDisplay() {
-        // Clear existing snake parts and re-render
-        children.filter { $0 is SKSpriteNode && $0 != food }.forEach { $0.removeFromParent() }
-
-        for (index, part) in snake.enumerated() {
-            let texture = SKTexture(imageNamed: SnakePartType(rawValue: index % 3)?.imageName(for: moveDirection) ?? "head")
-            let newPart = SKSpriteNode(texture: texture, size: CGSize(width: gridSize, height: gridSize))
-            newPart.position = CGPoint(x: CGFloat(part.0) * gridSize, y: CGFloat(part.1) * gridSize)
-            addChild(newPart)
+        // Remove existing snake nodes
+        children.filter { $0.name == "snakeSegment" }.forEach { $0.removeFromParent() }
+        
+        // Create new snake nodes with proper textures
+        for (index, currentPosition) in snake.enumerated() {
+            let previousPosition = index > 0 ? snake[index - 1] : nil
+            let nextPosition = index < snake.count - 1 ? snake[index + 1] : nil
+            
+            let partType: SnakePartType
+            if index == 0 {
+                partType = .head
+            } else if index == snake.count - 1 {
+                partType = .tail
+            } else {
+                partType = .body
+            }
+            
+            let textureName = partType.getTextureName(
+                previousPosition: previousPosition,
+                currentPosition: currentPosition,
+                nextPosition: nextPosition
+            )
+            
+            let texture = SKTexture(imageNamed: textureName)
+            let node = SKSpriteNode(texture: texture, size: CGSize(width: gridSize, height: gridSize))
+            node.position = CGPoint(x: CGFloat(currentPosition.0) * gridSize,
+                                  y: CGFloat(currentPosition.1) * gridSize)
+            node.name = "snakeSegment"
+            addChild(node)
         }
-        enum SnakePartType: Int {
-            case head = 0
-            case body = 1
-            case tail = 2
+    }
 
-            func imageName(for direction: CGVector) -> String {
-                switch self {
-                case .head:
-                    if direction.dx > 0 { return "head_right" }
-                    if direction.dx < 0 { return "head_left" }
-                    if direction.dy > 0 { return "head_up" }
-                    return "head_down"
-                case .body:
+    private enum SnakePartType {
+        case head
+        case body
+        case tail
+        
+        func getTextureName(previousPosition: (Int, Int)?, 
+                           currentPosition: (Int, Int), 
+                           nextPosition: (Int, Int)?) -> String {
+            switch self {
+            case .head:
+                guard let next = nextPosition else { return "head_up" }
+                let dx = currentPosition.0 - next.0
+                let dy = currentPosition.1 - next.1
+                if dx > 0 { return "head_right" }
+                if dx < 0 { return "head_left" }
+                if dy > 0 { return "head_up" }
+                return "head_down"
+                
+            case .tail:
+                guard let prev = previousPosition else { return "tail_left" }
+                let dx = prev.0 - currentPosition.0
+                let dy = prev.1 - currentPosition.1
+                if dx > 0 { return "tail_left" }
+                if dx < 0 { return "tail_right" }
+                if dy > 0 { return "tail_down" }
+                return "tail_up"
+                
+            case .body:
+                guard let prev = previousPosition, let next = nextPosition else {
                     return "body_horizontal"
-                case .tail:
-                    if direction.dx > 0 { return "tail_left" }
-                    if direction.dx < 0 { return "tail_right" }
-                    if direction.dy > 0 { return "tail_down" }
-                    return "tail_up"
+                }
+                
+                let isVertical = prev.0 == next.0
+                let isHorizontal = prev.1 == next.1
+                
+                if isVertical { return "body_vertical" }
+                if isHorizontal { return "body_horizontal" }
+                
+                // Handle corners
+                let dx1 = currentPosition.0 - prev.0
+                let dy1 = currentPosition.1 - prev.1
+                let dx2 = next.0 - currentPosition.0
+                let dy2 = next.1 - currentPosition.1
+                
+                switch (dx1, dy1, dx2, dy2) {
+                case (1, 0, 0, 1), (0, -1, -1, 0): return "body_topright"
+                case (-1, 0, 0, 1), (0, -1, 1, 0): return "body_topleft"
+                case (1, 0, 0, -1), (0, 1, -1, 0): return "body_bottomright"
+                case (-1, 0, 0, -1), (0, 1, 1, 0): return "body_bottomleft"
+                default: return "body_horizontal"
                 }
             }
         }

@@ -12,6 +12,8 @@
 		319991362CAA41C100DAB94F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 319991352CAA41C100DAB94F /* Assets.xcassets */; };
 		319991392CAA41C100DAB94F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 319991382CAA41C100DAB94F /* Preview Assets.xcassets */; };
 		319991402CAA42F900DAB94F /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3199913F2CAA42F900DAB94F /* GameScene.swift */; };
+		31F434EF2CEB440C00D39AF8 /* MainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31F434EE2CEB440C00D39AF8 /* MainMenu.swift */; };
+		31F434F32CEB47A700D39AF8 /* GameCenterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31F434F22CEB47A700D39AF8 /* GameCenterManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +23,8 @@
 		319991352CAA41C100DAB94F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		319991382CAA41C100DAB94F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3199913F2CAA42F900DAB94F /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		31F434EE2CEB440C00D39AF8 /* MainMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenu.swift; sourceTree = "<group>"; };
+		31F434F22CEB47A700D39AF8 /* GameCenterManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameCenterManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +60,8 @@
 				319991312CAA41BE00DAB94F /* SnakesintheGrassApp.swift */,
 				319991332CAA41BE00DAB94F /* ContentView.swift */,
 				3199913F2CAA42F900DAB94F /* GameScene.swift */,
+				31F434F22CEB47A700D39AF8 /* GameCenterManager.swift */,
+				31F434EE2CEB440C00D39AF8 /* MainMenu.swift */,
 				319991352CAA41C100DAB94F /* Assets.xcassets */,
 				319991372CAA41C100DAB94F /* Preview Content */,
 			);
@@ -143,6 +149,8 @@
 				319991402CAA42F900DAB94F /* GameScene.swift in Sources */,
 				319991342CAA41BE00DAB94F /* ContentView.swift in Sources */,
 				319991322CAA41BE00DAB94F /* SnakesintheGrassApp.swift in Sources */,
+				31F434F32CEB47A700D39AF8 /* GameCenterManager.swift in Sources */,
+				31F434EF2CEB440C00D39AF8 /* MainMenu.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

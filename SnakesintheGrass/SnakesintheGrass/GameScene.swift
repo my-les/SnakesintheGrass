@@ -234,12 +234,15 @@ class GameScene: SKScene {
                 currentPosition: currentPosition,
                 nextPosition: nextPosition
             )
-            
+
+            //print("typeshit \(textureName)")
+
             let texture = SKTexture(imageNamed: textureName)
             let node = SKSpriteNode(texture: texture, size: CGSize(width: gridSize, height: gridSize))
             node.position = CGPoint(x: CGFloat(currentPosition.0) * gridSize,
                                   y: CGFloat(currentPosition.1) * gridSize)
             node.name = "snakeSegment"
+            //print("this is the node: \(node)")
             addChild(node)
         }
     }
@@ -260,6 +263,7 @@ class GameScene: SKScene {
                 if dx > 0 { return "head_right" }
                 if dx < 0 { return "head_left" }
                 if dy > 0 { return "head_up" }
+                //print("gimmie head")
                 return "head_down"
                 
             case .tail:
@@ -269,10 +273,12 @@ class GameScene: SKScene {
                 if dx > 0 { return "tail_left" }
                 if dx < 0 { return "tail_right" }
                 if dy > 0 { return "tail_down" }
+                //print("tookthatthangupshootymake it roll")
                 return "tail_up"
                 
             case .body:
                 guard let prev = previousPosition, let next = nextPosition else {
+                    print("1")
                     return "body_horizontal"
                 }
                 
@@ -289,11 +295,22 @@ class GameScene: SKScene {
                 let dy2 = next.1 - currentPosition.1
                 
                 switch (dx1, dy1, dx2, dy2) {
-                case (1, 0, 0, 1), (0, -1, -1, 0): return "body_topright"
-                case (-1, 0, 0, 1), (0, -1, 1, 0): return "body_topleft"
-                case (1, 0, 0, -1), (0, 1, -1, 0): return "body_bottomright"
-                case (-1, 0, 0, -1), (0, 1, 1, 0): return "body_bottomleft"
-                default: return "body_horizontal"
+                case (1, 0, 0, 1), (0, -1, -1, 0):
+
+                    print("this")
+                    return "body_topleft"
+                case (-1, 0, 0, 1), (0, -1, 1, 0):
+                    print("that")
+                    return "body_topright"
+                case (1, 0, 0, -1), (0, 1, -1, 0):
+                    print("typeshit")
+                    return "body_bottomleft"
+                case (-1, 0, 0, -1), (0, 1, 1, 0): 
+                    print("umm")
+                    return "body_bottomright"
+                default: 
+                    print("we got here")
+                    return "body_bottomright"
                 }
             }
         }

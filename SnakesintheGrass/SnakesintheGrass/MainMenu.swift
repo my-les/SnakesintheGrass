@@ -66,14 +66,17 @@ class MainMenu: SKScene {
                 gameScene.scaleMode = .resizeFill
                 view?.presentScene(gameScene, transition: .flipHorizontal(withDuration: 0.5))
             } else if node.name == "aboutButton" {
-                showAlert(withTitle: "How to Play", message:
+                showAlert(withTitle: "how to play", message:
                 """
-                1. swipe to control the snake's direction
-                2. apple a day keep the dr. away
-                3. don't snake yourself twin
-                4. try to get the highest score!
 
-                🐍
+                1. swipe to control the direction
+
+                2. crush the apple
+
+                3. don't snake yourself twin
+
+                4. try to get the highest score
+
                 """
                 )
             } else if node.name == "highScoresButton" {

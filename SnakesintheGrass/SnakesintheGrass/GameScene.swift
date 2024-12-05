@@ -6,9 +6,20 @@ class GameScene: SKScene {
     private var food: SKSpriteNode?
     private var moveDirection: CGVector = CGVector(dx: 1, dy: 0)
     private var nextMoveTime: TimeInterval = 0
-    private let moveSpeed: TimeInterval = 0.1
+    private var moveSpeed: TimeInterval = 0.1
     private var score: Int = 0
     private var scoreLabel: SKLabelNode?
+
+
+    private var level: Int = 1
+    private var baseSpeed: TimeInterval = 0.1
+    private let speedIncreaseFactor: Double = 0.85
+    private var levelLabel: SKLabelNode?
+
+    private let impactFeedbackGenerator = UIImpactFeedbackGenerator(style: .rigid)
+    private let notificationFeedbackGenerator = UINotificationFeedbackGenerator()
+
+
     private let gridSize: CGFloat = 20
     private let gridWidth: Int
     private let gridHeight: Int
@@ -27,6 +38,8 @@ class GameScene: SKScene {
     override func didMove(to view: SKView) {
         backgroundColor = .white
         setupGame()
+        impactFeedbackGenerator.prepare()
+        notificationFeedbackGenerator.prepare()
 
         // Adding swipe gesture recognizers
         let swipeUp = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
@@ -65,6 +78,10 @@ class GameScene: SKScene {
         snake.removeAll()
         food?.removeFromParent()
         score = 0
+
+        level = 1
+        moveSpeed = baseSpeed
+
         moveDirection = CGVector(dx: 1, dy: 0)
         isGameOver = false
 
@@ -95,7 +112,7 @@ class GameScene: SKScene {
         scoreLabel?.fontSize = 16
         scoreLabel?.fontColor = .black
         scoreLabel?.position = CGPoint(x: size.width / 2, y: size.height - 95)
-        scoreLabel?.text = "Score: 0"
+        scoreLabel?.text = "Score: 0 | Level: 1"
         addChild(scoreLabel!)
     }
 
@@ -116,6 +133,8 @@ class GameScene: SKScene {
         // Check if the snake eats the food
         let foodPosition = (Int(food?.position.x ?? 0) / Int(gridSize), Int(food?.position.y ?? 0) / Int(gridSize))
         if newHead == foodPosition {
+            impactFeedbackGenerator.impactOccurred()
+
             snake.insert(newHead, at: 0)
             spawnFood()
             updateScore()
@@ -125,6 +144,7 @@ class GameScene: SKScene {
         }
 
         if checkForCollisions() {
+            notificationFeedbackGenerator.notificationOccurred(.error)
             gameOver()
         }
 
@@ -139,7 +159,26 @@ class GameScene: SKScene {
 
     private func updateScore() {
         score += 10
-        scoreLabel?.text = "Score: \(score)"
+        scoreLabel?.text = "Score: \(score) | Level: \(level)"
+
+        // Calculate new level
+        let newLevel = (score / 50) + 1
+        if newLevel != level {
+            level = newLevel
+            updateSpeedForLevel()
+        }
+    }
+
+    private func updateSpeedForLevel() {
+        // Every third level, increase speed
+        if level % 3 == 0 {
+            // Calculate how many speed increases have occurred
+            let speedIncreases = level / 3
+            // Apply the speed increase factor for each increment
+            let newSpeed = baseSpeed * pow(speedIncreaseFactor, Double(speedIncreases))
+            // Ensure speed doesn't get too fast (optional)
+             moveSpeed = max(newSpeed, 0.05)
+        }
     }
 
     private func gameOver() {
@@ -148,9 +187,9 @@ class GameScene: SKScene {
     }
 
     private func showGameOverAlert() {
-        let alertController = UIAlertController(title: "how you backdoor yourself?", message: "your score: \(score)", preferredStyle: .alert)
+        let alertController = UIAlertController(title: "never backdoor yourself twin", message: "your score: \(score) #numbers... you reached level: \(level) slick. good job!", preferredStyle: .alert)
 
-        let playAgainAction = UIAlertAction(title: "play again lil twin", style: .default) { [weak self] _ in
+        let playAgainAction = UIAlertAction(title: "play again typeshi", style: .default) { [weak self] _ in
             self?.restartGame()
         }
 
@@ -178,7 +217,7 @@ class GameScene: SKScene {
 
     private func shareScore() {
         let activityViewController = UIActivityViewController(
-            activityItems: ["I scored \(score) points in Snakes in the Grass!"],
+            activityItems: ["I scored \(score) points in slyme!"],
             applicationActivities: nil
         )
 
@@ -214,12 +253,12 @@ class GameScene: SKScene {
     private func updateSnakeDisplay() {
         // Remove existing snake nodes
         children.filter { $0.name == "snakeSegment" }.forEach { $0.removeFromParent() }
-        
+
         // Create new snake nodes with proper textures
         for (index, currentPosition) in snake.enumerated() {
             let previousPosition = index > 0 ? snake[index - 1] : nil
             let nextPosition = index < snake.count - 1 ? snake[index + 1] : nil
-            
+
             let partType: SnakePartType
             if index == 0 {
                 partType = .head
@@ -228,7 +267,7 @@ class GameScene: SKScene {
             } else {
                 partType = .body
             }
-            
+
             let textureName = partType.getTextureName(
                 previousPosition: previousPosition,
                 currentPosition: currentPosition,
@@ -240,8 +279,9 @@ class GameScene: SKScene {
             let texture = SKTexture(imageNamed: textureName)
             let node = SKSpriteNode(texture: texture, size: CGSize(width: gridSize, height: gridSize))
             node.position = CGPoint(x: CGFloat(currentPosition.0) * gridSize,
-                                  y: CGFloat(currentPosition.1) * gridSize)
+                                    y: CGFloat(currentPosition.1) * gridSize)
             node.name = "snakeSegment"
+            //node.color = .black
             //print("this is the node: \(node)")
             addChild(node)
         }
@@ -251,21 +291,25 @@ class GameScene: SKScene {
         case head
         case body
         case tail
-        
-        func getTextureName(previousPosition: (Int, Int)?, 
-                           currentPosition: (Int, Int), 
-                           nextPosition: (Int, Int)?) -> String {
+
+        func getTextureName(previousPosition: (Int, Int)?,
+                            currentPosition: (Int, Int),
+                            nextPosition: (Int, Int)?) -> String {
             switch self {
             case .head:
-                guard let next = nextPosition else { return "head_up" }
+                guard let next = nextPosition else {
+                    print("heads")
+                    return "head_up"
+                }
                 let dx = currentPosition.0 - next.0
                 let dy = currentPosition.1 - next.1
+                //print("this is dy: \(dy) and this is dx: \(dx)")
                 if dx > 0 { return "head_right" }
                 if dx < 0 { return "head_left" }
                 if dy > 0 { return "head_up" }
                 //print("gimmie head")
                 return "head_down"
-                
+
             case .tail:
                 guard let prev = previousPosition else { return "tail_left" }
                 let dx = prev.0 - currentPosition.0
@@ -275,25 +319,25 @@ class GameScene: SKScene {
                 if dy > 0 { return "tail_down" }
                 //print("tookthatthangupshootymake it roll")
                 return "tail_up"
-                
+
             case .body:
                 guard let prev = previousPosition, let next = nextPosition else {
                     print("1")
                     return "body_horizontal"
                 }
-                
+
                 let isVertical = prev.0 == next.0
                 let isHorizontal = prev.1 == next.1
-                
+
                 if isVertical { return "body_vertical" }
                 if isHorizontal { return "body_horizontal" }
-                
+
                 // Handle corners
                 let dx1 = currentPosition.0 - prev.0
                 let dy1 = currentPosition.1 - prev.1
                 let dx2 = next.0 - currentPosition.0
                 let dy2 = next.1 - currentPosition.1
-                
+
                 switch (dx1, dy1, dx2, dy2) {
                 case (1, 0, 0, 1), (0, -1, -1, 0):
 
@@ -305,12 +349,12 @@ class GameScene: SKScene {
                 case (1, 0, 0, -1), (0, 1, -1, 0):
                     print("typeshit")
                     return "body_bottomleft"
-                case (-1, 0, 0, -1), (0, 1, 1, 0): 
+                case (-1, 0, 0, -1), (0, 1, 1, 0):
                     print("umm")
                     return "body_bottomright"
-                default: 
+                default:
                     print("we got here")
-                    return "body_bottomright"
+                    return "body_vertical"
                 }
             }
         }

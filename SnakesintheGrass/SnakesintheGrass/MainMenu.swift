@@ -22,12 +22,19 @@ class MainMenu: SKScene {
         addChild(titleLabel)
 
         // Create the subtitle
+        let subsubTItleLabel = SKLabelNode(text: "当你停止梦想时，你就开始走向衰亡")
+        subsubTItleLabel.fontName = "CourierNewPS-BoldMT"
+        subsubTItleLabel.fontSize = 12
+        subsubTItleLabel.fontColor = .black
+        subsubTItleLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 + 80)
+        addChild(subsubTItleLabel)
+
         let subtitleLabel = SKLabelNode(text: "eat or be ate, snake or be snaked.")
         subtitleLabel.fontName = "CourierNewPS-BoldMT"
         subtitleLabel.fontSize = 14
-        subtitleLabel.fontColor = .systemPink
-        subtitleLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 + 80)
-        addChild(subtitleLabel)
+        subtitleLabel.fontColor = .black
+        subtitleLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 + 60)
+        //addChild(subtitleLabel)
 
         // Create the Play button
         let playButton = createButton(withText: "play", name: "playButton", position: CGPoint(x: size.width / 2, y: size.height / 2))

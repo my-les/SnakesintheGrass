@@ -10,7 +10,6 @@ class GameScene: SKScene {
     private var score: Int = 0
     private var scoreLabel: SKLabelNode?
 
-
     private var level: Int = 1
     private var baseSpeed: TimeInterval = 0.1
     private let speedIncreaseFactor: Double = 0.85
@@ -19,11 +18,13 @@ class GameScene: SKScene {
     private let impactFeedbackGenerator = UIImpactFeedbackGenerator(style: .rigid)
     private let notificationFeedbackGenerator = UINotificationFeedbackGenerator()
 
+    private var pauseButton: SKSpriteNode?
 
-    private let gridSize: CGFloat = 20
+    private let gridSize: CGFloat = 22
     private let gridWidth: Int
     private let gridHeight: Int
     private var isGameOver: Bool = false
+    private var isPausedGame: Bool = false
 
     override init(size: CGSize) {
         gridWidth = Int(size.width / gridSize)
@@ -36,42 +37,44 @@ class GameScene: SKScene {
     }
 
     override func didMove(to view: SKView) {
-        backgroundColor = .white
-        setupGame()
-        impactFeedbackGenerator.prepare()
-        notificationFeedbackGenerator.prepare()
+            backgroundColor = .black
+            setupGame()
+            impactFeedbackGenerator.prepare()
+            notificationFeedbackGenerator.prepare()
 
-        // Adding swipe gesture recognizers
-        let swipeUp = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
-        swipeUp.direction = .up
-        view.addGestureRecognizer(swipeUp)
+            // Add swipe gestures
+            addSwipeGesture(to: view, direction: .up)
+            addSwipeGesture(to: view, direction: .down)
+            addSwipeGesture(to: view, direction: .left)
+            addSwipeGesture(to: view, direction: .right)
 
-        let swipeDown = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
-        swipeDown.direction = .down
-        view.addGestureRecognizer(swipeDown)
+            setupPauseButton()
+        }
 
-        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
-        swipeLeft.direction = .left
-        view.addGestureRecognizer(swipeLeft)
+        private func addSwipeGesture(to view: SKView, direction: UISwipeGestureRecognizer.Direction) {
+            let swipeGesture = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+            swipeGesture.direction = direction
+            view.addGestureRecognizer(swipeGesture)
+        }
 
-        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
-        swipeRight.direction = .right
-        view.addGestureRecognizer(swipeRight)
+        @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
+            switch gesture.direction {
+            case .up:
+                if moveDirection.dy == 0 { moveDirection = CGVector(dx: 0, dy: 1) }
+            case .down:
+                if moveDirection.dy == 0 { moveDirection = CGVector(dx: 0, dy: -1) }
+            case .left:
+                if moveDirection.dx == 0 { moveDirection = CGVector(dx: -1, dy: 0) }
+            case .right:
+                if moveDirection.dx == 0 { moveDirection = CGVector(dx: 1, dy: 0) }
+            default:
+                break
+            }
     }
 
-    @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
-        switch gesture.direction {
-        case .up:
-            if moveDirection.dy == 0 { moveDirection = CGVector(dx: 0, dy: 1) }
-        case .down:
-            if moveDirection.dy == 0 { moveDirection = CGVector(dx: 0, dy: -1) }
-        case .left:
-            if moveDirection.dx == 0 { moveDirection = CGVector(dx: -1, dy: 0) }
-        case .right:
-            if moveDirection.dx == 0 { moveDirection = CGVector(dx: 1, dy: 0) }
-        default:
-            break
-        }
+    private func togglePause() {
+        isPausedGame.toggle()
+        pauseButton?.color = isPausedGame ? .red : .gray
     }
 
     private func setupGame() {
@@ -110,18 +113,63 @@ class GameScene: SKScene {
     private func setupScoreLabel() {
         scoreLabel = SKLabelNode(fontNamed: "CourierNewPS-BoldMT")
         scoreLabel?.fontSize = 16
-        scoreLabel?.fontColor = .black
+        scoreLabel?.fontColor = .white
         scoreLabel?.position = CGPoint(x: size.width / 2, y: size.height - 95)
         scoreLabel?.text = "Score: 0 | Level: 1"
         addChild(scoreLabel!)
     }
 
-    override func update(_ currentTime: TimeInterval) {
-        if !isGameOver && currentTime > nextMoveTime {
-            moveSnake()
-            nextMoveTime = currentTime + moveSpeed
+    private func setupPauseButton() {
+            pauseButton = SKSpriteNode(imageNamed: "pause")
+            pauseButton?.position = CGPoint(x: size.width - 50, y: size.height - 90)
+            pauseButton?.name = "pauseButton"
+            pauseButton?.size = CGSize(width: 40, height: 40)
+            addChild(pauseButton!)
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+         guard let touch = touches.first else { return }
+         let location = touch.location(in: self)
+         let nodesAtPoint = nodes(at: location)
+
+         if nodesAtPoint.contains(where: { $0.name == "pauseButton" }) {
+             if isPaused {
+                 resumeGame()
+             } else {
+                 pauseGame()
+             }
+         }
+     }
+
+    private func pauseGame() {
+        pauseButton?.texture = SKTexture(imageNamed: "play")
+        isPaused = true
+        self.isPaused = true
+        let pausedLabel = SKLabelNode(text: "PAUSED")
+        pausedLabel.fontName = "CourierNewPS-BoldMT"
+        pausedLabel.fontSize = 40
+        pausedLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        pausedLabel.zPosition = 100
+        pausedLabel.name = "pausedLabel"
+        addChild(pausedLabel)
+    }
+
+    private func resumeGame() {
+        pauseButton?.texture = SKTexture(imageNamed: "pause")
+        isPaused = false
+        self.isPaused = false
+
+        if let pausedLabel = childNode(withName: "pausedLabel") {
+            pausedLabel.removeFromParent()
         }
     }
+
+    override func update(_ currentTime: TimeInterval) {
+          if !isGameOver && !isPaused && currentTime > nextMoveTime {
+              moveSnake()
+              nextMoveTime = currentTime + moveSpeed
+          }
+      }
 
     private func moveSnake() {
         guard let head = snake.first else { return }
@@ -130,11 +178,9 @@ class GameScene: SKScene {
             (head.1 + Int(moveDirection.dy) + gridHeight) % gridHeight
         )
 
-        // Check if the snake eats the food
         let foodPosition = (Int(food?.position.x ?? 0) / Int(gridSize), Int(food?.position.y ?? 0) / Int(gridSize))
         if newHead == foodPosition {
             impactFeedbackGenerator.impactOccurred()
-
             snake.insert(newHead, at: 0)
             spawnFood()
             updateScore()
@@ -187,7 +233,7 @@ class GameScene: SKScene {
     }
 
     private func showGameOverAlert() {
-        let alertController = UIAlertController(title: "never backdoor yourself twin", message: "your score: \(score) #numbers... you reached level: \(level) slick. good job!", preferredStyle: .alert)
+        let alertController = UIAlertController(title: "never backdoor yourself twin!", message: "your score: \(score)...& you reached level: \(level) slick. good job!", preferredStyle: .alert)
 
         let playAgainAction = UIAlertAction(title: "play again typeshi", style: .default) { [weak self] _ in
             self?.restartGame()

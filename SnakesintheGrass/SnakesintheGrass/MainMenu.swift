@@ -11,13 +11,13 @@ import SpriteKit
 class MainMenu: SKScene {
 
     override func didMove(to view: SKView) {
-        backgroundColor = .white
+        backgroundColor = .black
 
         // Create the title label
         let titleLabel = SKLabelNode(text: "slyme")
         titleLabel.fontName = "CourierNewPS-BoldMT"
         titleLabel.fontSize = 30
-        titleLabel.fontColor = .black
+        titleLabel.fontColor = .systemIndigo
         titleLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 + 100)
         addChild(titleLabel)
 
@@ -25,16 +25,16 @@ class MainMenu: SKScene {
         let subsubTItleLabel = SKLabelNode(text: "当你停止梦想时，你就开始走向衰亡")
         subsubTItleLabel.fontName = "CourierNewPS-BoldMT"
         subsubTItleLabel.fontSize = 12
-        subsubTItleLabel.fontColor = .black
+        subsubTItleLabel.fontColor = .gray
         subsubTItleLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 + 80)
         addChild(subsubTItleLabel)
 
-        let subtitleLabel = SKLabelNode(text: "eat or be ate, snake or be snaked.")
+        let subtitleLabel = SKLabelNode(text: "eat or be ate.")
         subtitleLabel.fontName = "CourierNewPS-BoldMT"
         subtitleLabel.fontSize = 14
-        subtitleLabel.fontColor = .black
+        subtitleLabel.fontColor = .red
         subtitleLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 + 60)
-        //addChild(subtitleLabel)
+        addChild(subtitleLabel)
 
         // Create the Play button
         let playButton = createButton(withText: "play", name: "playButton", position: CGPoint(x: size.width / 2, y: size.height / 2))

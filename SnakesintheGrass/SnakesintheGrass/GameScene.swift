@@ -233,9 +233,9 @@ class GameScene: SKScene {
     }
 
     private func showGameOverAlert() {
-        let alertController = UIAlertController(title: "never backdoor yourself twin!", message: "your score: \(score)...& you reached level: \(level) slick. good job!", preferredStyle: .alert)
+        let alertController = UIAlertController(title: "never backdoor yourself twin!", message: "you scored \(score) & reached level \(level)", preferredStyle: .alert)
 
-        let playAgainAction = UIAlertAction(title: "play again typeshi", style: .default) { [weak self] _ in
+        let playAgainAction = UIAlertAction(title: "play again", style: .default) { [weak self] _ in
             self?.restartGame()
         }
 
@@ -263,7 +263,7 @@ class GameScene: SKScene {
 
     private func shareScore() {
         let activityViewController = UIActivityViewController(
-            activityItems: ["I scored \(score) points in slyme!"],
+            activityItems: ["I scored \(score) points in slyme! play now: https://apps.apple.com/us/app/slyme/id6739715471"],
             applicationActivities: nil
         )
 
@@ -274,7 +274,14 @@ class GameScene: SKScene {
 
     private func goToMainMenu() {
         // Placeholder for now, as we don't have a main menu yet
-        print("Going to main menu")
+        guard let view = self.view else { return }
+
+        let transition = SKTransition.fade(withDuration: 0.5)
+        let mainMenuScene = MainMenu(size: view.bounds.size)
+        mainMenuScene.scaleMode = .resizeFill
+
+        view.presentScene(mainMenuScene, transition: transition)
+
     }
 
     private func moveTowardsFood() {

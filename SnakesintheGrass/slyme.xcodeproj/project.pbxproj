@@ -17,7 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		3199912E2CAA41BE00DAB94F /* SnakesintheGrass.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SnakesintheGrass.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3199912E2CAA41BE00DAB94F /* slyme.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = slyme.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		319991312CAA41BE00DAB94F /* SnakesintheGrassApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnakesintheGrassApp.swift; sourceTree = "<group>"; };
 		319991332CAA41BE00DAB94F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		319991352CAA41C100DAB94F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -49,7 +49,7 @@
 		3199912F2CAA41BE00DAB94F /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3199912E2CAA41BE00DAB94F /* SnakesintheGrass.app */,
+				3199912E2CAA41BE00DAB94F /* slyme.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -79,9 +79,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		3199912D2CAA41BE00DAB94F /* SnakesintheGrass */ = {
+		3199912D2CAA41BE00DAB94F /* slyme */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3199913C2CAA41C100DAB94F /* Build configuration list for PBXNativeTarget "SnakesintheGrass" */;
+			buildConfigurationList = 3199913C2CAA41C100DAB94F /* Build configuration list for PBXNativeTarget "slyme" */;
 			buildPhases = (
 				3199912A2CAA41BE00DAB94F /* Sources */,
 				3199912B2CAA41BE00DAB94F /* Frameworks */,
@@ -91,9 +91,9 @@
 			);
 			dependencies = (
 			);
-			name = SnakesintheGrass;
+			name = slyme;
 			productName = SnakesintheGrass;
-			productReference = 3199912E2CAA41BE00DAB94F /* SnakesintheGrass.app */;
+			productReference = 3199912E2CAA41BE00DAB94F /* slyme.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -111,7 +111,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 319991292CAA41BE00DAB94F /* Build configuration list for PBXProject "SnakesintheGrass" */;
+			buildConfigurationList = 319991292CAA41BE00DAB94F /* Build configuration list for PBXProject "slyme" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -124,7 +124,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3199912D2CAA41BE00DAB94F /* SnakesintheGrass */,
+				3199912D2CAA41BE00DAB94F /* slyme */,
 			);
 		};
 /* End PBXProject section */
@@ -337,7 +337,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		319991292CAA41BE00DAB94F /* Build configuration list for PBXProject "SnakesintheGrass" */ = {
+		319991292CAA41BE00DAB94F /* Build configuration list for PBXProject "slyme" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3199913A2CAA41C100DAB94F /* Debug */,
@@ -346,7 +346,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3199913C2CAA41C100DAB94F /* Build configuration list for PBXNativeTarget "SnakesintheGrass" */ = {
+		3199913C2CAA41C100DAB94F /* Build configuration list for PBXNativeTarget "slyme" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3199913D2CAA41C100DAB94F /* Debug */,

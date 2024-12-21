@@ -51,4 +51,6 @@ class GameCenterManager: NSObject, GKGameCenterControllerDelegate, ObservableObj
     func gameCenterViewControllerDidFinish(_ gameCenterViewController: GKGameCenterViewController) {
         gameCenterViewController.dismiss(animated: true)
     }
-} 
+
+    
+}

@@ -1,5 +1,6 @@
 import SpriteKit
 import UIKit
+import GameKit
 
 class GameScene: SKScene {
     private var snake: [(Int, Int)] = []
@@ -230,6 +231,7 @@ class GameScene: SKScene {
     private func gameOver() {
         isGameOver = true
         showGameOverAlert()
+        GameCenterManager().submitScore(score)
     }
 
     private func showGameOverAlert() {
@@ -339,6 +341,7 @@ class GameScene: SKScene {
             addChild(node)
         }
     }
+
 
     private enum SnakePartType {
         case head

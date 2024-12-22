@@ -27,13 +27,13 @@ class MainMenu: SKScene {
         subsubTItleLabel.fontSize = 12
         subsubTItleLabel.fontColor = .gray
         subsubTItleLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 + 80)
-        addChild(subsubTItleLabel)
+        //addChild(subsubTItleLabel)
 
         let subtitleLabel = SKLabelNode(text: "eat or be ate.")
         subtitleLabel.fontName = "CourierNewPS-BoldMT"
         subtitleLabel.fontSize = 14
         subtitleLabel.fontColor = .red
-        subtitleLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 + 60)
+        subtitleLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 + 80)
         addChild(subtitleLabel)
 
         // Create the Play button

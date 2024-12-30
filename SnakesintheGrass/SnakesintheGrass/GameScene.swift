@@ -3,6 +3,8 @@ import UIKit
 import GameKit
 
 class GameScene: SKScene {
+    ///MARK: create skins eventually + add timer !!!!!!!!!
+
     private var snake: [(Int, Int)] = []
     private var food: SKSpriteNode?
     private var moveDirection: CGVector = CGVector(dx: 1, dy: 0)
@@ -21,6 +23,13 @@ class GameScene: SKScene {
 
     private var pauseButton: SKSpriteNode?
 
+    private var gameTimer: Timer?
+
+    private var startTime: TimeInterval = 0
+    private var elapsedTime: TimeInterval = 0
+
+    private var clockLabel: SKLabelNode!
+
     private let gridSize: CGFloat = 22
     private let gridWidth: Int
     private let gridHeight: Int
@@ -38,39 +47,40 @@ class GameScene: SKScene {
     }
 
     override func didMove(to view: SKView) {
-            backgroundColor = .black
-            setupGame()
-            impactFeedbackGenerator.prepare()
-            notificationFeedbackGenerator.prepare()
+        backgroundColor = .black
+        setupClockLabel()
+        setupGame()
+        impactFeedbackGenerator.prepare()
+        notificationFeedbackGenerator.prepare()
 
-            // Add swipe gestures
-            addSwipeGesture(to: view, direction: .up)
-            addSwipeGesture(to: view, direction: .down)
-            addSwipeGesture(to: view, direction: .left)
-            addSwipeGesture(to: view, direction: .right)
+        // Add swipe gestures
+        addSwipeGesture(to: view, direction: .up)
+        addSwipeGesture(to: view, direction: .down)
+        addSwipeGesture(to: view, direction: .left)
+        addSwipeGesture(to: view, direction: .right)
 
-            setupPauseButton()
+        setupPauseButton()
+    }
+
+    private func addSwipeGesture(to view: SKView, direction: UISwipeGestureRecognizer.Direction) {
+        let swipeGesture = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        swipeGesture.direction = direction
+        view.addGestureRecognizer(swipeGesture)
+    }
+
+    @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
+        switch gesture.direction {
+        case .up:
+            if moveDirection.dy == 0 { moveDirection = CGVector(dx: 0, dy: 1) }
+        case .down:
+            if moveDirection.dy == 0 { moveDirection = CGVector(dx: 0, dy: -1) }
+        case .left:
+            if moveDirection.dx == 0 { moveDirection = CGVector(dx: -1, dy: 0) }
+        case .right:
+            if moveDirection.dx == 0 { moveDirection = CGVector(dx: 1, dy: 0) }
+        default:
+            break
         }
-
-        private func addSwipeGesture(to view: SKView, direction: UISwipeGestureRecognizer.Direction) {
-            let swipeGesture = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
-            swipeGesture.direction = direction
-            view.addGestureRecognizer(swipeGesture)
-        }
-
-        @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
-            switch gesture.direction {
-            case .up:
-                if moveDirection.dy == 0 { moveDirection = CGVector(dx: 0, dy: 1) }
-            case .down:
-                if moveDirection.dy == 0 { moveDirection = CGVector(dx: 0, dy: -1) }
-            case .left:
-                if moveDirection.dx == 0 { moveDirection = CGVector(dx: -1, dy: 0) }
-            case .right:
-                if moveDirection.dx == 0 { moveDirection = CGVector(dx: 1, dy: 0) }
-            default:
-                break
-            }
     }
 
     private func togglePause() {
@@ -82,9 +92,10 @@ class GameScene: SKScene {
         snake.removeAll()
         food?.removeFromParent()
         score = 0
-
         level = 1
         moveSpeed = baseSpeed
+        clockLabel.text = "00:00.000"
+
 
         moveDirection = CGVector(dx: 1, dy: 0)
         isGameOver = false
@@ -105,8 +116,17 @@ class GameScene: SKScene {
         food?.removeFromParent()
         let texture = SKTexture(imageNamed: "apple")
         food = SKSpriteNode(texture: texture, size: CGSize(width: gridSize, height: gridSize))
-        let randomX = CGFloat(Int.random(in: 0..<gridWidth)) * gridSize
-        let randomY = CGFloat(Int.random(in: 0..<gridHeight)) * gridSize
+
+        let safeMargin: CGFloat = gridSize * 2 // Safe area from edges and UI elements
+
+        let minX = safeMargin
+        let maxX = size.width - safeMargin
+        let minY = safeMargin
+        let maxY = size.height - safeMargin
+
+        let randomX = CGFloat(Int.random(in: Int(minX / gridSize)...Int(maxX / gridSize))) * gridSize
+        let randomY = CGFloat(Int.random(in: Int(minY / gridSize)...Int(maxY / gridSize))) * gridSize
+
         food?.position = CGPoint(x: randomX, y: randomY)
         addChild(food!)
     }
@@ -120,39 +140,110 @@ class GameScene: SKScene {
         addChild(scoreLabel!)
     }
 
+    private func setupClockLabel() {
+        clockLabel = SKLabelNode(text: "00:00.000")
+        clockLabel.position = CGPoint(x: size.width / 2, y: size.height - 75)
+        clockLabel.fontName = "CourierNewPS-BoldMT"
+        clockLabel.fontColor = .white
+        clockLabel.fontSize = 19
+        addChild(clockLabel)
+    }
+
+    private func format(timeInterval: TimeInterval) -> String {
+        let interval = Int(timeInterval)
+        let seconds = interval % 60
+        let minutes = (interval / 60) % 60
+        let milliseconds = Int(timeInterval * 1000) % 1000
+        return String(format: "%02d:%02d.%03d", minutes, seconds, milliseconds)
+    }
+
     private func setupPauseButton() {
-            pauseButton = SKSpriteNode(imageNamed: "pause")
-            pauseButton?.position = CGPoint(x: size.width - 50, y: size.height - 90)
-            pauseButton?.name = "pauseButton"
-            pauseButton?.size = CGSize(width: 40, height: 40)
-            addChild(pauseButton!)
+        pauseButton = SKSpriteNode(imageNamed: "pause")
+        pauseButton?.position = CGPoint(x: size.width - 50, y: size.height - 90)
+        pauseButton?.name = "pauseButton"
+        pauseButton?.size = CGSize(width: 40, height: 40)
+        addChild(pauseButton!)
+    }
+
+    private func setupQuitButton() {
+        let quitLabel = SKLabelNode(text: "QUIT?")
+        quitLabel.fontName = "CourierNewPS-BoldMT"
+        quitLabel.fontSize = 20
+        quitLabel.fontColor = .red
+        quitLabel.position = CGPoint(x: size.width / 2, y: size.height / 2.2)
+        quitLabel.zPosition = 100
+        quitLabel.name = "quitLabel"
+        addChild(quitLabel)
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-         guard let touch = touches.first else { return }
-         let location = touch.location(in: self)
-         let nodesAtPoint = nodes(at: location)
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        let nodesAtPoint = nodes(at: location)
 
-         if nodesAtPoint.contains(where: { $0.name == "pauseButton" }) {
-             if isPaused {
-                 resumeGame()
-             } else {
-                 pauseGame()
-             }
-         }
-     }
+        if nodesAtPoint.contains(where: { $0.name == "pauseButton" }) {
+            if isPaused {
+                resumeGame()
+            } else {
+                pauseGame()
+            }
+        } else if nodesAtPoint.contains(where: { $0.name == "quitLabel" }) {
+            showQuitConfirmation()
+        }
+    }
 
     private func pauseGame() {
-        pauseButton?.texture = SKTexture(imageNamed: "play")
+        guard !isPaused else { return } // Avoid duplicate pauses
+
         isPaused = true
         self.isPaused = true
-        let pausedLabel = SKLabelNode(text: "PAUSED")
-        pausedLabel.fontName = "CourierNewPS-BoldMT"
-        pausedLabel.fontSize = 40
-        pausedLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
-        pausedLabel.zPosition = 100
-        pausedLabel.name = "pausedLabel"
-        addChild(pausedLabel)
+        stopClock()
+
+        pauseButton?.texture = SKTexture(imageNamed: "play")
+
+        if childNode(withName: "pausedLabel") == nil {
+            let pausedLabel = SKLabelNode(text: "PAUSED")
+            pausedLabel.fontName = "CourierNewPS-BoldMT"
+            pausedLabel.fontSize = 40
+            pausedLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
+            pausedLabel.zPosition = 100
+            pausedLabel.name = "pausedLabel"
+            addChild(pausedLabel)
+        }
+
+        setupQuitButton()
+    }
+
+    private func showQuitConfirmation() {
+        let alertController = UIAlertController(
+            title: "Quit Game",
+            message: "Are you sure you want to fold twin?",
+            preferredStyle: .alert
+        )
+
+        let quitAction = UIAlertAction(title: "Quit", style: .destructive) { [weak self] _ in
+            self?.quitGame()
+        }
+
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+
+        alertController.addAction(quitAction)
+        alertController.addAction(cancelAction)
+
+        if let viewController = self.view?.window?.rootViewController {
+            viewController.present(alertController, animated: true, completion: nil)
+        }
+    }
+
+    private func quitGame() {
+        cleanupScene()
+        guard let view = self.view else {return}
+
+        let transition = SKTransition.fade(withDuration: 0.5)
+        let mainMenuScene = MainMenu(size: view.bounds.size)
+        mainMenuScene.scaleMode = .resizeFill
+
+        view.presentScene(mainMenuScene, transition: transition)
     }
 
     private func resumeGame() {
@@ -163,14 +254,26 @@ class GameScene: SKScene {
         if let pausedLabel = childNode(withName: "pausedLabel") {
             pausedLabel.removeFromParent()
         }
+
+        if let quitLabel = childNode(withName: "quitLabel") {
+            quitLabel.removeFromParent()
+        }
     }
 
     override func update(_ currentTime: TimeInterval) {
-          if !isGameOver && !isPaused && currentTime > nextMoveTime {
-              moveSnake()
-              nextMoveTime = currentTime + moveSpeed
-          }
-      }
+        if !isGameOver && !isPaused && currentTime > nextMoveTime {
+            moveSnake()
+            nextMoveTime = currentTime + moveSpeed
+
+
+            if startTime == 0 {
+                startTime = currentTime
+            }
+            elapsedTime = currentTime - startTime
+            clockLabel.text = format(timeInterval: elapsedTime)
+
+        }
+    }
 
     private func moveSnake() {
         guard let head = snake.first else { return }
@@ -224,18 +327,25 @@ class GameScene: SKScene {
             // Apply the speed increase factor for each increment
             let newSpeed = baseSpeed * pow(speedIncreaseFactor, Double(speedIncreases))
             // Ensure speed doesn't get too fast (optional)
-             moveSpeed = max(newSpeed, 0.05)
+            moveSpeed = max(newSpeed, 0.05)
         }
     }
 
     private func gameOver() {
         isGameOver = true
+        stopClock()
         showGameOverAlert()
         GameCenterManager().submitScore(score)
     }
 
+    private func stopClock() {
+        gameTimer?.invalidate()
+        gameTimer = nil
+    }
+
     private func showGameOverAlert() {
-        let alertController = UIAlertController(title: "never backdoor yourself twin!", message: "you scored \(score) & reached level \(level)", preferredStyle: .alert)
+        //let finalTime = format(timeInterval: elapsedTime)
+        let alertController = UIAlertController(title: "never backdoor yourself twin!", message: "you scored \(score) & reached level \(level).", preferredStyle: .alert)
 
         let playAgainAction = UIAlertAction(title: "play again", style: .default) { [weak self] _ in
             self?.restartGame()
@@ -259,8 +369,29 @@ class GameScene: SKScene {
     }
 
     private func restartGame() {
-        removeAllChildren()
+        cleanupScene()
         setupGame()
+    }
+
+    private func cleanupScene() {
+        // Stop timers
+        stopClock()
+
+        // Remove all children
+        removeAllChildren()
+        removeAllActions()
+
+        // Clear gesture recognizers (if added directly to the view)
+        self.view?.gestureRecognizers?.forEach { self.view?.removeGestureRecognizer($0) }
+
+        // Reset other properties
+        gameTimer = nil
+        clockLabel = nil
+        pauseButton = nil
+        food = nil
+        scoreLabel = nil
+        isGameOver = false
+        isPausedGame = false
     }
 
     private func shareScore() {

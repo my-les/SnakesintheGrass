@@ -3,8 +3,7 @@ import UIKit
 import GameKit
 
 class GameScene: SKScene {
-    ///MARK: create skins eventually + add timer !!!!!!!!!
-
+    ///MARK: create skins eventually
     private var snake: [(Int, Int)] = []
     private var food: SKSpriteNode?
     private var moveDirection: CGVector = CGVector(dx: 1, dy: 0)
@@ -94,8 +93,22 @@ class GameScene: SKScene {
         score = 0
         level = 1
         moveSpeed = baseSpeed
+        startTime = 0  // Reset start time
+        elapsedTime = 0  // Reset elapsed time
+        
+        // Initialize UI elements if they don't exist
+        if clockLabel == nil {
+            setupClockLabel()
+        }
         clockLabel.text = "00:00.000"
-
+        
+        if scoreLabel == nil {
+            setupScoreLabel()
+        }
+        
+        if pauseButton == nil {
+            setupPauseButton()
+        }
 
         moveDirection = CGVector(dx: 1, dy: 0)
         isGameOver = false
@@ -104,7 +117,6 @@ class GameScene: SKScene {
         let startPosition = CGPoint(x: CGFloat(gridWidth / 2), y: CGFloat(gridHeight / 2))
         addSnakePart(at: startPosition)
         spawnFood()
-        setupScoreLabel()
     }
 
     private func addSnakePart(at position: CGPoint) {
@@ -370,6 +382,13 @@ class GameScene: SKScene {
 
     private func restartGame() {
         cleanupScene()
+        // Re-add swipe gestures since they were removed in cleanupScene
+        if let view = self.view {
+            addSwipeGesture(to: view, direction: .up)
+            addSwipeGesture(to: view, direction: .down)
+            addSwipeGesture(to: view, direction: .left)
+            addSwipeGesture(to: view, direction: .right)
+        }
         setupGame()
     }
 
@@ -470,6 +489,34 @@ class GameScene: SKScene {
             //node.color = .black
             //print("this is the node: \(node)")
             addChild(node)
+        }
+    }
+
+    public func saveGameState() {
+        let gameState: [String: Any] = [
+            "score": score,
+            "level": level,
+            "snake": snake.map { ["x": $0.0, "y": $0.1] },
+            "moveDirection": ["dx": moveDirection.dx, "dy": moveDirection.dy],
+            "elapsedTime": elapsedTime
+        ]
+        UserDefaults.standard.set(gameState, forKey: "savedGameState")
+        UserDefaults.standard.synchronize()
+    }
+
+    public func loadGameState() {
+        guard let gameState = UserDefaults.standard.dictionary(forKey: "savedGameState") else { return }
+
+        score = gameState["score"] as? Int ?? 0
+        level = gameState["level"] as? Int ?? 1
+        elapsedTime = gameState["elapsedTime"] as? TimeInterval ?? 0
+
+        if let savedSnake = gameState["snake"] as? [[String: Int]] {
+            snake = savedSnake.map { ($0["x"] ?? 0, $0["y"] ?? 0) }
+        }
+
+        if let savedDirection = gameState["moveDirection"] as? [String: CGFloat] {
+            moveDirection = CGVector(dx: savedDirection["dx"] ?? 0, dy: savedDirection["dy"] ?? 0)
         }
     }
 

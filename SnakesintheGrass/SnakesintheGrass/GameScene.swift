@@ -12,6 +12,8 @@ class GameScene: SKScene {
     private var score: Int = 0
     private var scoreLabel: SKLabelNode?
 
+    private var saveMessageLabel: SKLabelNode?
+
     private var level: Int = 1
     private var baseSpeed: TimeInterval = 0.1
     private let speedIncreaseFactor: Double = 0.85
@@ -59,6 +61,9 @@ class GameScene: SKScene {
         addSwipeGesture(to: view, direction: .right)
 
         setupPauseButton()
+
+        setupSaveMessageLabel()
+        loadGameState()
     }
 
     private func addSwipeGesture(to view: SKView, direction: UISwipeGestureRecognizer.Direction) {
@@ -85,6 +90,40 @@ class GameScene: SKScene {
     private func togglePause() {
         isPausedGame.toggle()
         pauseButton?.color = isPausedGame ? .red : .gray
+    }
+
+    private func setupSaveMessageLabel() {
+          saveMessageLabel = SKLabelNode(fontNamed: "CourierNewPS-BoldMT")
+          saveMessageLabel?.fontSize = 20
+          saveMessageLabel?.fontColor = .white
+          saveMessageLabel?.position = CGPoint(x: size.width / 2, y: size.height / 2 - 50)
+          saveMessageLabel?.zPosition = 100
+          saveMessageLabel?.isHidden = true
+          addChild(saveMessageLabel!)
+    }
+
+    private func showSaveMessage() {
+        saveMessageLabel?.text = "Game Saved!"
+        saveMessageLabel?.isHidden = false
+
+        let fadeOut = SKAction.fadeOut(withDuration: 2.0)
+        let hideAction = SKAction.run { [weak self] in
+            self?.saveMessageLabel?.isHidden = true
+            self?.saveMessageLabel?.alpha = 1.0 // Reset alpha for next use
+        }
+        let sequence = SKAction.sequence([fadeOut, hideAction])
+        saveMessageLabel?.run(sequence)
+    }
+
+    private func addSaveGameButton() {
+        let saveButton = SKLabelNode(fontNamed: "CourierNewPS-BoldMT")
+        saveButton.text = "Save Game"
+        saveButton.fontSize = 20
+        saveButton.fontColor = .green
+        saveButton.position = CGPoint(x: size.width / 2, y: size.height / 2 - 100)
+        saveButton.name = "saveGameButton"
+        saveButton.zPosition = 100
+        addChild(saveButton)
     }
 
     private func setupGame() {
@@ -114,7 +153,10 @@ class GameScene: SKScene {
         isGameOver = false
 
         // Initial snake position
-        let startPosition = CGPoint(x: CGFloat(gridWidth / 2), y: CGFloat(gridHeight / 2))
+        let startY = CGFloat(gridHeight) * 0.7
+        let startX = CGFloat(gridWidth) * 0.6
+
+        let startPosition = CGPoint(x: startX, y: startY)
         addSnakePart(at: startPosition)
         spawnFood()
     }
@@ -170,10 +212,14 @@ class GameScene: SKScene {
     }
 
     private func setupPauseButton() {
+        // Remove any existing pause button first
+        pauseButton?.removeFromParent()
+        
         pauseButton = SKSpriteNode(imageNamed: "pause")
         pauseButton?.position = CGPoint(x: size.width - 50, y: size.height - 90)
         pauseButton?.name = "pauseButton"
         pauseButton?.size = CGSize(width: 40, height: 40)
+        pauseButton?.zPosition = 10  // Ensure it's above other elements
         addChild(pauseButton!)
     }
 
@@ -202,16 +248,28 @@ class GameScene: SKScene {
         } else if nodesAtPoint.contains(where: { $0.name == "quitLabel" }) {
             showQuitConfirmation()
         }
+
+        if nodesAtPoint.contains(where: { $0.name == "saveGameButton" }) {
+            saveGameState()
+            showSaveMessage()
+        }
     }
 
     private func pauseGame() {
-        guard !isPaused else { return } // Avoid duplicate pauses
+        guard !isPaused else { return }
 
         isPaused = true
         self.isPaused = true
         stopClock()
 
-        pauseButton?.texture = SKTexture(imageNamed: "play")
+        // Remove existing button and create new one with play texture
+        pauseButton?.removeFromParent()
+        pauseButton = SKSpriteNode(imageNamed: "play")
+        pauseButton?.position = CGPoint(x: size.width - 50, y: size.height - 90)
+        pauseButton?.name = "pauseButton"
+        pauseButton?.size = CGSize(width: 40, height: 40)
+        pauseButton?.zPosition = 10
+        addChild(pauseButton!)
 
         if childNode(withName: "pausedLabel") == nil {
             let pausedLabel = SKLabelNode(text: "PAUSED")
@@ -224,7 +282,9 @@ class GameScene: SKScene {
         }
 
         setupQuitButton()
+        addSaveGameButton()
     }
+    
 
     private func showQuitConfirmation() {
         let alertController = UIAlertController(
@@ -259,7 +319,15 @@ class GameScene: SKScene {
     }
 
     private func resumeGame() {
-        pauseButton?.texture = SKTexture(imageNamed: "pause")
+        // Remove existing button and create new one with pause texture
+        pauseButton?.removeFromParent()
+        pauseButton = SKSpriteNode(imageNamed: "pause")
+        pauseButton?.position = CGPoint(x: size.width - 50, y: size.height - 90)
+        pauseButton?.name = "pauseButton"
+        pauseButton?.size = CGSize(width: 40, height: 40)
+        pauseButton?.zPosition = 10
+        addChild(pauseButton!)
+        
         isPaused = false
         self.isPaused = false
 
@@ -269,6 +337,10 @@ class GameScene: SKScene {
 
         if let quitLabel = childNode(withName: "quitLabel") {
             quitLabel.removeFromParent()
+        }
+
+        if let saveButton = childNode(withName: "saveGameButton") {
+            saveButton.removeFromParent() // Remove save button when resuming
         }
     }
 
@@ -492,34 +564,36 @@ class GameScene: SKScene {
         }
     }
 
-    public func saveGameState() {
-        let gameState: [String: Any] = [
-            "score": score,
-            "level": level,
-            "snake": snake.map { ["x": $0.0, "y": $0.1] },
-            "moveDirection": ["dx": moveDirection.dx, "dy": moveDirection.dy],
-            "elapsedTime": elapsedTime
-        ]
-        UserDefaults.standard.set(gameState, forKey: "savedGameState")
-        UserDefaults.standard.synchronize()
+    public  func saveGameState() {
+            let gameState: [String: Any] = [
+                "score": score,
+                "level": level,
+                "snake": snake.map { ["x": $0.0, "y": $0.1] },
+                "moveDirection": ["dx": moveDirection.dx, "dy": moveDirection.dy],
+                "elapsedTime": elapsedTime
+            ]
+            UserDefaults.standard.set(gameState, forKey: "savedGameState")
+            UserDefaults.standard.synchronize()
+            print("Game state saved successfully.") // Optional: For debugging
     }
 
     public func loadGameState() {
-        guard let gameState = UserDefaults.standard.dictionary(forKey: "savedGameState") else { return }
+            guard let gameState = UserDefaults.standard.dictionary(forKey: "savedGameState") else { return }
 
-        score = gameState["score"] as? Int ?? 0
-        level = gameState["level"] as? Int ?? 1
-        elapsedTime = gameState["elapsedTime"] as? TimeInterval ?? 0
+            score = gameState["score"] as? Int ?? 0
+            level = gameState["level"] as? Int ?? 1
+            elapsedTime = gameState["elapsedTime"] as? TimeInterval ?? 0
 
-        if let savedSnake = gameState["snake"] as? [[String: Int]] {
-            snake = savedSnake.map { ($0["x"] ?? 0, $0["y"] ?? 0) }
-        }
+            if let savedSnake = gameState["snake"] as? [[String: Int]] {
+                snake = savedSnake.map { ($0["x"] ?? 0, $0["y"] ?? 0) }
+            }
 
-        if let savedDirection = gameState["moveDirection"] as? [String: CGFloat] {
-            moveDirection = CGVector(dx: savedDirection["dx"] ?? 0, dy: savedDirection["dy"] ?? 0)
-        }
+            if let savedDirection = gameState["moveDirection"] as? [String: CGFloat] {
+                moveDirection = CGVector(dx: savedDirection["dx"] ?? 0, dy: savedDirection["dy"] ?? 0)
+            }
+
+            print("Game state loaded successfully.") // Optional: For debugging
     }
-
 
     private enum SnakePartType {
         case head

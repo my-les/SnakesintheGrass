@@ -96,7 +96,7 @@ class GameScene: SKScene {
           saveMessageLabel = SKLabelNode(fontNamed: "CourierNewPS-BoldMT")
           saveMessageLabel?.fontSize = 20
           saveMessageLabel?.fontColor = .white
-          saveMessageLabel?.position = CGPoint(x: size.width / 2, y: size.height / 2 - 50)
+          saveMessageLabel?.position = CGPoint(x: size.width / 2, y: size.height / 2 - 100)
           saveMessageLabel?.zPosition = 100
           saveMessageLabel?.isHidden = true
           addChild(saveMessageLabel!)
@@ -120,7 +120,7 @@ class GameScene: SKScene {
         saveButton.text = "Save Game"
         saveButton.fontSize = 20
         saveButton.fontColor = .green
-        saveButton.position = CGPoint(x: size.width / 2, y: size.height / 2 - 100)
+        saveButton.position = CGPoint(x: size.width / 2, y: size.height / 2 - 75)
         saveButton.name = "saveGameButton"
         saveButton.zPosition = 100
         addChild(saveButton)
@@ -224,7 +224,7 @@ class GameScene: SKScene {
     }
 
     private func setupQuitButton() {
-        let quitLabel = SKLabelNode(text: "QUIT?")
+        let quitLabel = SKLabelNode(text: "Quit?")
         quitLabel.fontName = "CourierNewPS-BoldMT"
         quitLabel.fontSize = 20
         quitLabel.fontColor = .red
@@ -272,7 +272,7 @@ class GameScene: SKScene {
         addChild(pauseButton!)
 
         if childNode(withName: "pausedLabel") == nil {
-            let pausedLabel = SKLabelNode(text: "PAUSED")
+            let pausedLabel = SKLabelNode(text: "PAUSE")
             pausedLabel.fontName = "CourierNewPS-BoldMT"
             pausedLabel.fontSize = 40
             pausedLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
@@ -420,6 +420,7 @@ class GameScene: SKScene {
         stopClock()
         showGameOverAlert()
         GameCenterManager().submitScore(score)
+        resetSavedGameState()
     }
 
     private func stopClock() {
@@ -548,18 +549,15 @@ class GameScene: SKScene {
             let textureName = partType.getTextureName(
                 previousPosition: previousPosition,
                 currentPosition: currentPosition,
-                nextPosition: nextPosition
+                nextPosition: nextPosition,
+                moveDirection: moveDirection
             )
-
-            //print("typeshit \(textureName)")
 
             let texture = SKTexture(imageNamed: textureName)
             let node = SKSpriteNode(texture: texture, size: CGSize(width: gridSize, height: gridSize))
             node.position = CGPoint(x: CGFloat(currentPosition.0) * gridSize,
                                     y: CGFloat(currentPosition.1) * gridSize)
             node.name = "snakeSegment"
-            //node.color = .black
-            //print("this is the node: \(node)")
             addChild(node)
         }
     }
@@ -595,6 +593,12 @@ class GameScene: SKScene {
             print("Game state loaded successfully.") // Optional: For debugging
     }
 
+    private func resetSavedGameState() {
+        UserDefaults.standard.removeObject(forKey: "savedGameState")
+        UserDefaults.standard.synchronize()
+        print("Game over!, Saved state cleared.")
+    }
+
     private enum SnakePartType {
         case head
         case body
@@ -602,20 +606,27 @@ class GameScene: SKScene {
 
         func getTextureName(previousPosition: (Int, Int)?,
                             currentPosition: (Int, Int),
-                            nextPosition: (Int, Int)?) -> String {
+                            nextPosition: (Int, Int)?,
+                            moveDirection: CGVector) -> String {
             switch self {
             case .head:
-                guard let next = nextPosition else {
-                    print("heads")
-                    return "head_up"
+                // For single segment snake (head only), use moveDirection
+                if nextPosition == nil {
+                    if moveDirection.dx > 0 { return "head_right" }
+                    if moveDirection.dx < 0 { return "head_left" }
+                    if moveDirection.dy > 0 { return "head_up" }
+                    if moveDirection.dy < 0 { return "head_down" }
+                    return "head_right" // default direction
                 }
+                
+                // Existing logic for when there are multiple segments
+                guard let next = nextPosition else { return "head_right" }
                 let dx = currentPosition.0 - next.0
                 let dy = currentPosition.1 - next.1
-                //print("this is dy: \(dy) and this is dx: \(dx)")
+                
                 if dx > 0 { return "head_right" }
                 if dx < 0 { return "head_left" }
                 if dy > 0 { return "head_up" }
-                //print("gimmie head")
                 return "head_down"
 
             case .tail:
